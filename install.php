@@ -79,6 +79,7 @@ class TEMPLATE{
 					<br>
 					<?=$params['html']?>
 					<form class="step2" method="post" action="/install.php?step=3">
+						<input type="hidden" name="configReady" value="1">
 						<input type="submit" value="Config File is Made">
 					</form>
 				</div>
@@ -88,10 +89,13 @@ class TEMPLATE{
 	}
 
 
-
-
-
 }
+
+// Get Config
+$config = Quartz::getConfig();
+
+// Scope Test!
+print(MySQL_DB);
 
 
 // Get Step
@@ -99,7 +103,7 @@ $step = isset($_GET['step']) && is_numeric($_GET['step']) && $_GET['step']>1 ? i
 
 // Step 1
 if( $step === 1 ){
-	print( TEMPLATE::htmlWrap("TEMPLATE::install_s1") );
+	print( TEMPLATE::htmlWrap( "TEMPLATE::install_s1" ) );
 }else
 
 // Step 2
@@ -132,21 +136,15 @@ if(
 					);
 
 		// Return Error
-		print( isset($_POST['ajax']) ? json_encode($error) : TEMPLATE::htmlWrap("TEMPLATE::install_s1", array($error)) );
+		print( isset($_POST['ajax']) ? json_encode($error) : TEMPLATE::htmlWrap( "TEMPLATE::install_s1", array($error) ) );
 
 	}else{
 
 		// Success!
 
-		// Create Config File
-		$config = array(
-			'path' => $_SERVER['DOCUMENT_ROOT'],
-			'file' => 'config.php'
-		);
-
 		// Check If Writable
-		if ( is_writable($config['path'].$config['file']) ){
-			$config = fopen($_SERVER['DOCUMENT_ROOT']."configure.php", "a");	
+		if ( is_writable( $config['path'] . $config['file'] ) ){
+			$config = fopen( $config['path'] . $config['file'], "a" );	
 
 			// Create File
 
@@ -157,7 +155,7 @@ if(
 			//Permissions Denied
 
 			$return = array(
-				'html' => '<textarea class="code">'.htmlentities(TEMPLATE::configFile()).'</textarea>'
+				'html' => '<textarea class="code">' . htmlentities( TEMPLATE::configFile() ) . '</textarea>'
 			);
 
 			// Show Step 2 - Permissions Denied
@@ -166,11 +164,29 @@ if(
 	}
 }else
 
-if( $step === 3 ){
+if( $step === 3 && isset($_POST['configReady']) ){
 
-		// Create Tables in MySQL
+	// Validate
+	switch( $config['status'] ){
+		case -1:		// Doesn't Exist
+			
+			break;
 
-		// Done!
+		case 0:			// Not Readable
+			
+			break;
+
+		default:		// Exists & Redable
+
+			// Connect
+
+
+			// Create Tables in MySQL
+
+			// Done!
+
+			break;
+	}
 }
 
 // No match Return to Original Page

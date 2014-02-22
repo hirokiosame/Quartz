@@ -1,6 +1,9 @@
 <?php
+if( @include("config.php") === false ){
+	print('a<br>sdfsdfsdfs');	print('a<br>sdfsdfsdfs');
 
-require_once("config.php");
+	header("Location: /install.php");
+}
 
 class Quartz{
 
@@ -26,6 +29,27 @@ class Quartz{
 		//print("Hi I'm Quartz");
 	}
 
+
+	public static function getConfig(){
+
+		$config = array(
+			'path' => $_SERVER['DOCUMENT_ROOT'],
+			'file' => '/config.php',
+		);
+
+		// We want to store it numerically so different files can handle the error differently (eg. Install.php)
+		$config['status'] = ( !file_exists($config['path'] . $config['file']) ) ? -1 : ( (!is_readable($config['path'] . $config['file'])) ? 0 : 1 );
+
+
+		// If Exists, include it (it's in the scope of this function for now)
+		if( $config['status'] === 1 ){
+			include( $config['path'] . $config['file'] );
+			print("Scoped: ".Config\MySQL_DB);
+		}
+
+
+		return $config;
+	}
 
 
 	private function MySQL(){

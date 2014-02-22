@@ -1,16 +1,27 @@
 <?php
 
+	// We scope constants to Config so it is only global once tested
 
-// Host MySQL is located on
-define('MySQL_HOST', 'localhost');
+	namespace Config;
 
-// MySQL DB
-define('MySQL_DB', 'quartz');
+	// Host MySQL is located on
+	//define('MySQL_HOST', 'localhost');
+	const MySQL_HOST = 'localhost';
 
-// MySQL User
-define('MySQL_USER', 'rosot');
+	// MySQL DB
+	//define('MySQL_DB', 'quartz');
+	const MySQL_DB = 'quartz';
 
-// Password for MySQL User
-define('MySQL_PASSWORD', 'root');
+	// MySQL User
+	//define('MySQL_USER', 'rosot');
+	const MySQL_USER = 'root';
+
+	// Password for MySQL User
+	//define('MySQL_PASSWORD', 'root');
+	const MySQL_PASSWoRD = 'root';
+
+
+
+
 
 ?>
