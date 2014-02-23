@@ -1,16 +1,9 @@
 <?php
-if( @include("config.php") === false ){
-	print('a<br>sdfsdfsdfs');	print('a<br>sdfsdfsdfs');
-
-	header("Location: /install.php");
-}
 
 class Quartz{
 
-
 	// MySQL Connection
 	private $mysqli;
-
 
 
 	function __construct() {
@@ -18,8 +11,13 @@ class Quartz{
 		// Start Session
 		session_start();
 
-		// Establish MySQL Connection
-		$this->MySQL();
+		// Include config.php
+		$this->config = $this->getConfig();
+
+		// If MySQL Connection fails -> Send to Wizard
+		if( $this->config['status'] === 0 || $this->config['mysqli']->connect_error || $this->config['mysqli']->tables_error ){
+			header("Location: /install.php");
+		}
 
 		// Get Session
 
@@ -38,38 +36,43 @@ class Quartz{
 		);
 
 		// We want to store it numerically so different files can handle the error differently (eg. Install.php)
-		$config['status'] = ( !file_exists($config['path'] . $config['file']) ) ? -1 : ( (!is_readable($config['path'] . $config['file'])) ? 0 : 1 );
+		// Not redable -> might as well not exist -> recreate file instead of intimidating terminal chmod command
+		$config['status'] = !is_readable($config['path'] . $config['file']) ? 0 : 1;
+		
+		// Test MySQL Credentials if config exists
+		if(
+			// If Exists...
+			$config['status'] === 1 &&
 
+			// include in the scope of this function for now for validation
+			include( $config['path'] . $config['file'] )
+		){ if(
+			// Make sure each parameter is set
+			defined('MySQL_HOST') && strlen(MySQL_HOST)>0			&&
+			defined('MySQL_DB') && strlen(MySQL_DB)>0				&&
+			defined('MySQL_USER') && strlen(MySQL_USER)>0			&&
+			defined('MySQL_PASSWORD') && strlen(MySQL_PASSWORD)>0
+		){
 
-		// If Exists, include it (it's in the scope of this function for now)
-		if( $config['status'] === 1 ){
-			include( $config['path'] . $config['file'] );
-			print("Scoped: ".Config\MySQL_DB);
-		}
+			// Validate MySQL Connection Before Passing it to the Global Scope
+			$config['mysqli'] = @new mysqli(MySQL_HOST, MySQL_USER, MySQL_PASSWORD, MySQL_DB );
 
+			// Check that there are tables?
+			if(
+				!$config['mysqli']->connect_error &&
+				$config['mysqli']->query("SHOW TABLES FROM `".MySQL_DB."` WHERE `Tables_in_".MySQL_DB."` LIKE 'myTable' OR `Tables_in_".MySQL_DB."` LIKE 'myTable2'")->num_rows !== 3
+			){
+				$config['mysqli']->tables_error = 'Tables have not been setup yet.';
+			}
+		} }
 
 		return $config;
 	}
 
 
-	private function MySQL(){
+	private static function MySQL(){
 
 		
-		// Connect
-		$this->mysqli = @new mysqli(MySQL_HOST, MySQL_USER, MySQL_PASSWORD, MySQL_DB) or die("AD");
-
-		// Error Connecting
-		if( $this->mysqli->connect_error ){
-			//print("<pre>");	
-			//print_R($_SERVER);
-			header("Location: /install.php");
-			print("Go to Installation Wiz to Fix");
-		}
-
-
-
-
-
 		/*
 		// Create Database if doesn't exist
 		$this->mysqli->query("CREATE DATABASE IF NOT EXISTS `quartz`;") or die();
@@ -104,5 +107,7 @@ class Quartz{
 	}
 
 }
+
+require_once("class.Template.php");
 
 ?>

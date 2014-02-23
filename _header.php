@@ -20,11 +20,11 @@
 		<![endif]-->
 
 		<div class="header">
-			<a class="header-title" href="">Quartz</a>
+			<a class="header-title" href="/">Quartz</a>
 
 			<ul>
-				<li><a href="#">About</a></li>
-				<li><a href="#">Contact</a></li>
+				<li><a href="/about.php">About</a></li>
+				<li><a href="/contact.php">Contact</a></li>
 				<li><a class="login" href="#">Login</a></li>
 				<li class="login">
 					<form action="/install.php?step2" method="post">
