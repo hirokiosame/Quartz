@@ -17,6 +17,9 @@ Account Table
 	status (0 = unactivated; 1 = activated; 2 = admin)
 */
 
+// Return Message
+$returnMessage = array('errors'=>array());
+
 // Only react if there is data sent
 if(
 	isset($_POST['name']) && strlen($_POST['name'])>0 &&
@@ -24,8 +27,6 @@ if(
 	isset($_POST['password']) && strlen($_POST['password'])>0 &&
 	isset($_POST['password2']) && strlen($_POST['password2'])>0
 ){
-
-	$returnMessage = array('errors'=>array());
 
 	//Validate Information
 
@@ -41,14 +42,17 @@ if(
 
 	// Register
 	if( 
-		count($returnMessage['errors']) === 0 && 
-		$Quartz->register($_POST['name'], $_POST['email'], $_POST['password'])
+		count($returnMessage['errors']) === 0 && 								// No errors
+		$Quartz->register($_POST['name'], $_POST['email'], $_POST['password'])	// Success Registering
 	){
 		$returnMessage['message'] = "Successfully registered! You will receive an activation email shortly.";
 	}else{
 		$returnMessage['errors']['registeration'] = "Something went wrong! Please try again later.";
 	}
-
-	print( json_encode($returnMessage) );
+}else{
+	$returnMessage['errors']['form'] = "Please fill in every input in the form.";
 }
+
+// Display Message
+print( json_encode($returnMessage) );
 ?>
