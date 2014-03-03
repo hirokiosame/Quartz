@@ -62,7 +62,7 @@ if(
 				$config = fopen( $config['path'] . $config['file'], "a" );	
 
 				// Flag for Verification
-				$verify = 1;
+				//$verify = 1;
 
 			}else{
 				//Permissions Denied
@@ -76,10 +76,10 @@ if(
 			}
 
 			// When Created - Verify Connection and Make Tables
-			if( $_POST['verify'] || $verify === 1 ){
+			//if( $_POST['verify'] || $verify === 1 ){
 
 
-			}
+			//}
 		}
 	}else{
 		print( Template::htmlWrap( "Template::install_s1" ) );
