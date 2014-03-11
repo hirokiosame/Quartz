@@ -14,17 +14,17 @@ $(function(){
 	.on("submit", "form", function(e){
 		e.preventDefault();
 
-		alert("prevented");
 		var $self = $(this);
 
 		$.ajax({
 			type: $(this).attr("method"),
 			url: $(this).attr("action"),
 			data: "ajax=1&"+$self.serialize(),
+			beforeSend: function(){
+				$(".error", $self).hide();
+			},
 			success: function(data){
-				alert("DAta rec");
 				console.log(data);
-				history.pushState({}, null, $self.attr("action"));
 
 				try{ data = JSON.parse(data); } catch(e){ return false; }
 
@@ -42,6 +42,9 @@ $(function(){
 				}
 
 				if( data.hasOwnProperty('html') ){
+
+					// If Sent back a new Page
+					history.pushState({}, null, $self.attr("action"));
 
 					var method = Object.keys(data['jQ'])[0];
 					$( data['jQ'][method] )[method]( data['html'] );

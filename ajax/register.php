@@ -17,6 +17,8 @@ Account Table
 	status (0 = unactivated; 1 = activated; 2 = admin)
 */
 
+
+
 // Return Message
 $returnMessage = array('errors'=>array());
 
@@ -49,6 +51,7 @@ if(
 	}else{
 		$returnMessage['errors']['registeration'] = "Something went wrong! Please try again later.";
 	}
+
 }else{
 	$returnMessage['errors']['form'] = "Please fill in every input in the form.";
 }
