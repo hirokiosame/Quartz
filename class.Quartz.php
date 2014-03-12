@@ -2,52 +2,62 @@
 
 //namespace Quartz;
 
-/*
-class MySQL{
-	private $connection;
-	function __construct($host, $database, $username, $password){
-		try {
-			$this->connection = new PDO(sprintf("mysql:host=%s;dbname=%s", $host, $database), $username, $password, array(
-				PDO::ATTR_PERSISTENT => true
-			));
-		} catch (PDOException $e){}
 
+class Account{
+
+	function __construct(&$mysql, $account = false){
+		$this->mysql = $mysql;
+		$this->account = $account;
 	}
 
-	// INSERT
-	public function insertMySQL($table, $params){
 
 
-		$query = "INSERT INTO `".MySQL_PREFIX."_".$table."` (`".implode( "`, `", array_keys($params) )."`) VALUES (:".implode(", :", array_keys($params)).")";
-		print($query);
-		if( !($stmt = $config['mysqli']->prepare($query)) ){
-			print("Prepare failed: (" . $config['mysqli']->errno . ") " . $config['mysqli']->error);
-			return false;
-		}
+	public function login(){
 
+		// No Credentials to Login With
+		if( count($this->account)==0 ){ return false; }
 
+		isset($this->account['password']) ? $this->account['password'] = hash('sha512', $this->account['password']) :0;
 
-		
-		//return $query;
-		foreach( $params as $key => $val ){
-			if( !$stmt->bindParam(':'.$key, $val) ){
-				print("Binding parameters failed: (" . $stmt->errno . ") " . $stmt->error);
-				return false;
-			}
-			print( gettype($val)."\n" );
-		}
-		
+		// Prepare Query
+		$query =	sprintf(
+						"SELECT * FROM `%s_%s` WHERE %s LIMIT 1",
+						MySQL_PREFIX,
+						"accounts",
+						implode(
+							' AND ',
+							array_map(function($key){
+								return sprintf("`%s`=:%s", $key, $key);
+							}, array_keys($this->account))
+						)
+					);
+
+		// Throw in Error Handlers
+		if( !$stmt = $this->mysql->prepare($query) ){ print("Error Preparing Query"); return false; }
+		if( !$stmt->execute($this->account) ){ print("Error Executing Query"); return false; }
+
+		// Set to Account
+		if( !$this->account = $stmt->fetch(PDO::FETCH_ASSOC) ){ print("Error Fetching"); return false; }
+
+		// Set to Session
+		$_SESSION['id'] = $this->account['id'];
+
+		// Close
+		$stmt->closeCursor();
+
+		return $this->account;
 
 	}
+	public function register(){
+		
+	}
+	
 }
-*/
+
 
 class Quartz{
 
-	// MySQL Connection
-	private $mysqli;
-
-	function __construct($checkInstall = True){
+	function __construct($checkInstall = True, $loggedIn = False){
 
 		// Version Check
 		if( version_compare(PHP_VERSION, '5.3.1', '<') ){
@@ -58,14 +68,24 @@ class Quartz{
 		session_start();
 
 		// Include config.php
-		$this->config = $this->getConfig();
+		$this->getConfig();
 
 		// If MySQL Connection fails -> Send to Installation Wizard
-		if( $checkInstall && ($this->config['status'] === 0 || !isset($this->config['mysql']) || isset($this->config['mysql']->tables_error) ) ){
+		if( $checkInstall && ($this->config['status'] === 0 || !isset($this->mysql) || isset($this->mysql->tables_error) ) ){
 			header("Location: /install.php");
 		}
+		//session_destroy();
+		//print_r($_SESSION);
 
-		// Get Session
+		// Check if Logged In
+		$this->account = (new Account($this->mysql, $_SESSION))->login();
+		if( !$this->account && $loggedIn  ){
+			header("Location: /login.php");
+		}
+
+		if( $this->account && !$loggedIn ){
+			header("Location: /home.php");
+		}
 
 
 		// Get Traffic
@@ -76,22 +96,22 @@ class Quartz{
 
 	public function getConfig(){
 
-		$config = array(
+		$this->config = array(
 			'path' => $_SERVER['DOCUMENT_ROOT'],
 			'file' => '/config.php'
 		);
 
 		// We want to store it numerically so different files can handle the error differently (eg. Install.php)
 		// Not redable -> might as well not exist -> recreate file instead of intimidating terminal chmod command
-		$config['status'] = !is_readable($config['path'] . $config['file']) ? 0 : 1;
+		$this->config['status'] = !is_readable($this->config['path'] . $this->config['file']) ? 0 : 1;
 		
 		// Test MySQL Credentials if config exists
 		if(
 			// If Exists...
-			$config['status'] === 1 &&
+			$this->config['status'] === 1 &&
 
-			// include in the scope of this function for now for validation
-			include( $config['path'] . $config['file'] )
+			// include in the scope of this function for validation
+			include( $this->config['path'] . $this->config['file'] )
 		){ if(
 			// Make sure each parameter is set
 			defined('MySQL_HOST') && strlen(MySQL_HOST)>0			&&
@@ -103,7 +123,7 @@ class Quartz{
 
 			// Connect to MySQL
 			try {
-				$config['mysql'] = new PDO(sprintf("mysql:host=%s;dbname=%s", MySQL_HOST, MySQL_DB), MySQL_USER, MySQL_PASSWORD, array(
+				$this->mysql = new PDO(sprintf("mysql:host=%s;dbname=%s", MySQL_HOST, MySQL_DB), MySQL_USER, MySQL_PASSWORD, array(
 					PDO::ATTR_PERSISTENT => true
 				));
 			} catch (PDOException $e){}
@@ -111,57 +131,56 @@ class Quartz{
 
 			// Check that there are tables?
 			if(
-				isset($config['mysql']) &&
-				$config['mysql']->query("SHOW TABLES WHERE `Tables_in_".MySQL_DB."` LIKE '".MySQL_PREFIX."_accounts' OR `Tables_in_".MySQL_DB."` LIKE '".MySQL_PREFIX."_accounts'")->rowCount() !== 1
+				isset($this->mysql) &&
+				$this->mysql->query("SHOW TABLES WHERE `Tables_in_".MySQL_DB."` LIKE '".MySQL_PREFIX."_accounts' OR `Tables_in_".MySQL_DB."` LIKE '".MySQL_PREFIX."_accounts'")->rowCount() !== 1
 			){
-				$config['mysql']->tables_error = 'Tables have not been setup yet.';
+				$this->mysql->tables_error = 'Tables have not been setup yet.';
 			}
 
 			/*
-			$config['mysqli'] = @new mysqli( MySQL_HOST, MySQL_USER, MySQL_PASSWORD, MySQL_DB );
+			$this->config['mysqli'] = @new mysqli( MySQL_HOST, MySQL_USER, MySQL_PASSWORD, MySQL_DB );
 
 			// Check that there are tables?
 			if(
-				!$config['mysqli']->connect_error &&
-				$config['mysqli']->query("SHOW TABLES FROM `".MySQL_DB."` WHERE `Tables_in_".MySQL_DB."` LIKE '".MySQL_PREFIX."_accounts' OR `Tables_in_".MySQL_DB."` LIKE '".MySQL_PREFIX."_accounts'")->num_rows !== 1
+				!$this->config['mysqli']->connect_error &&
+				$this->config['mysqli']->query("SHOW TABLES FROM `".MySQL_DB."` WHERE `Tables_in_".MySQL_DB."` LIKE '".MySQL_PREFIX."_accounts' OR `Tables_in_".MySQL_DB."` LIKE '".MySQL_PREFIX."_accounts'")->num_rows !== 1
 			){
-				$config['mysqli']->tables_error = 'Tables have not been setup yet.';
+				$this->config['mysqli']->tables_error = 'Tables have not been setup yet.';
 			}
 			*/
 		} }
+	}
 
-		return $config;
+	public function account($attr = false){
+		return $this->account = new Account($this->mysql, $attr);
 	}
 
 
-	public function MySQLinsert($params){
-		$stmt = $this->config['mysql']->prepare("INSERT INTO `".MySQL_PREFIX."_accounts` (`".implode( "`, `", array_keys($params) )."`) VALUES (:".implode(", :", array_keys($params)).")");
+	public function MySQLinsert($table, $params){
+		$query = sprintf("INSERT INTO `%s_%s` (`%s`) VALUES (:%s)", MySQL_PREFIX, $table, implode( "`, `", array_keys($params) ), implode(", :", array_keys($params)));
+		$stmt = $this->config['mysql']->prepare($query);
 		return $stmt->execute($params) && $stmt->closeCursor();
 	}
 
 
+	public function MySQLselect($table, $params, $returnAll=True){
+		$query = sprintf("SELECT * FROM `%s_%s` WHERE %s", MySQL_PREFIX, $table, implode(' AND ', array_map(function($key){ return sprintf("`%s`=:%s", $key, $key); }, array_keys($params))));
 
-	private static function MySQL(){
+		// Throw in Error Handlers
+		$stmt = $this->mysql->prepare($query);
+		$stmt->execute($params);
 
-		
-		/*
-		// Create Database if doesn't exist
-		$this->mysqli->query("CREATE DATABASE IF NOT EXISTS `quartz`;") or die();
+		if( !$returnAll ){ return $stmt; } // Maybe return a Reference instead?
+		$return = $stmt->fetchAll(PDO::FETCH_ASSOC);
+		$stmt->closeCursor();
 
-		// Select Database
-		$this->mysqli->select_db("quartz");
-
-		// Create Table if doesn't exist
-		$this->mysqli->query("
-			CREATE TABLE IF NOT EXISTS `people`	(
-													`name` VARCHAR(30) NOT NULL,
-													`age` smallint(3) unsigned NOT NULL,
-													PRIMARY KEY(`name`)
-												) ENGINE=InnoDB;
-		") or die();
-		*/
+		return $return;
 	}
 
+
+
+
+	/*
 	private function getTraffic(){
 		//Check if Session is set
 
@@ -172,6 +191,7 @@ class Quartz{
 					"RequestURI" => $_SERVER['REQUEST_URI']
 				);
 	}
+	*/
 
 }
 

@@ -160,7 +160,7 @@ if( isset($Quartz->config['mysql']) ){
 			// Register
 			if( 
 				count($returnMessage['errors']) === 0 &&	// No errors
-				$Quartz->MySQLinsert($params)				// Success Registering
+				$Quartz->MySQLinsert("accounts", $params)	// Success Registering
 			){
 				print( isset($_POST['ajax']) ? json_encode([ 'jQ' => ['replaceWith' => '.wrapper'], 'html' => Template::install_done() ]) : Template::htmlWrap("Template::install_done") );
 			}else{
