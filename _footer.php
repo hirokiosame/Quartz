@@ -1,6 +1,6 @@
 	</body>
 	<footer>
 		<hr class="soften">
-		About | Contact | Github
+		About | <a href="https://github.com/hirokiosame/Quartz">Github</a> | Ushioni
 	</footer>
 </html>

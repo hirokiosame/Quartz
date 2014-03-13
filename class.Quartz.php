@@ -79,11 +79,15 @@ class Quartz{
 
 		// Check if Logged In
 		$this->account = (new Account($this->mysql, $_SESSION))->login();
+
+
+		// If You're not logged in, and page requires you to be logged in
 		if( !$this->account && $loggedIn  ){
 			header("Location: /login.php");
 		}
 
-		if( $this->account && !$loggedIn ){
+		// If Page Requires you to be Logged out, but you're logged in
+		if( !$loggedIn && $this->account ){
 			header("Location: /home.php");
 		}
 
@@ -126,6 +130,11 @@ class Quartz{
 				$this->mysql = new PDO(sprintf("mysql:host=%s;dbname=%s", MySQL_HOST, MySQL_DB), MySQL_USER, MySQL_PASSWORD, array(
 					PDO::ATTR_PERSISTENT => true
 				));
+
+				// Throw Errors
+				// Switch to Throw - Catch
+				$this->mysql->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
+
 			} catch (PDOException $e){}
 
 

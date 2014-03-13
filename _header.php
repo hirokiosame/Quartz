@@ -23,8 +23,14 @@
 			<a class="header-title" href="/">Quartz</a>
 
 			<ul>
+			<? if( isset($Quartz->account) && $Quartz->account ){ ?>
+				<li><a href="/home.php">Home</a></li>
+				<li><a href="/website.php?id=<?=$Quartz->account['id']?>">Website</a></li>
+				<li><a href="/settings.php">Settings</a></li>
+				<? if($Quartz->account['type'] === 'admin'){ ?><li><a href="/admin/">Admin CP</a></li><? } ?>
+				<li><a href="/logout.php">Logout</a></li>
+			<? }else{ ?>
 				<li><a href="/about.php">About</a></li>
-				<li><a href="/contact.php">Contact</a></li>
 				<li><a class="login" href="#">Login</a></li>
 				<li class="login">
 					<form action="/install.php?step2" method="post">
@@ -33,7 +39,6 @@
 						<input type="submit" value="&#8594;">
 					</form>
 				</li>
+			<? } ?>
 			</ul>
 		</div>
-
-
