@@ -11,6 +11,17 @@ $(function(){
 
 	$(document)
 
+
+	// Installer
+	.on("input blur", "form.installer input[name=email]", function(e){
+		var $this = $(this),
+			uname = $this.parents("form").find("input[name=username]");
+
+		//!uname.val().length ? uname.val($(this).val().split("@")[0]) : 0;
+		uname.val($(this).val().split("@")[0]);
+	})
+
+
 	.on("submit", "form", function(e){
 		e.preventDefault();
 
@@ -21,20 +32,24 @@ $(function(){
 			url: $(this).attr("action"),
 			data: "ajax=1&"+$self.serialize(),
 			beforeSend: function(){
+
+				// Remove All Errors
 				$(".error", $self).hide();
+
+				// Disable Submit Button to Prevent multiple Requests
+				$("input[type='submit']", $self).attr('disabled', true);
 			},
 			success: function(data){
 				console.log(data);
 
+				// Confirm JSON Data
 				try{ data = JSON.parse(data); } catch(e){ return false; }
 
-
-				// If Inputs
+				// If Inputs - eg. resetting password inputs
 				if( data.hasOwnProperty('inputs') ){
 
 					// I like to scope my iterations
 					Object.keys(data.inputs).forEach(function(inputName){
-
 						// Get Target
 						$("input[name='"+inputName+"']", $self).val(data.inputs[inputName]);
 					});
@@ -53,10 +68,15 @@ $(function(){
 					});
 				}
 
-				// If HTML
-				if( data.hasOwnProperty('html') ){
-					var method = Object.keys(data['jQ'])[0];
-					$( data['jQ'][method] )[method]( data['html'] );
+				// If jQuery Request
+				if( data.hasOwnProperty('jQ') ){
+					// For Each Method
+					Object.keys(data.jQ).forEach(function(method){
+						// For Each Replacement Element
+						Object.keys(data.jQ[method]).forEach(function(rep){
+							$(rep)[method](data.jQ[method][rep]);
+						});
+					});
 				}
 
 				// If New URL

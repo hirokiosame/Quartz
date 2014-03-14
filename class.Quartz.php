@@ -44,12 +44,12 @@ class Account{
 			}
 		}catch(PDOException $e){
 			// Store in a Log File Instead...
-			print_r($e->getMessage());
+			//print_r($e->getMessage());
+			return false;
 		}
 
 		// Update Last Active
 		$this->mysql->query("UPDATE `".MySQL_PREFIX."_accounts` SET `lastActive` = CURRENT_TIMESTAMP WHERE `id` = ".$this->account['id']);
-
 
 		// Set to Session
 		$_SESSION['id'] = $this->account['id'];
@@ -61,7 +61,30 @@ class Account{
 
 	}
 	public function register(){
-		
+	
+		$query = sprintf(
+					"INSERT INTO `%s_%s` (`%s`) VALUES (:%s)",
+					MySQL_PREFIX,
+					"accounts",
+					implode( "`, `", array_keys($this->account) ),
+					implode(", :", array_keys($this->account))
+				);
+
+		try{
+			// Prepare & Execute
+			$stmt = $this->mysql->prepare($query);
+			$stmt->execute($this->account);
+			$stmt->closeCursor();
+		}catch(PDOException $e){
+			// Store in a Log File Instead...
+			//print_r($e->getMessage());
+			return false;
+		}
+
+		// Set to Session
+		$_SESSION['id'] = $this->mysql->lastInsertId();
+
+		return $this->account;
 	}
 	
 }
@@ -186,7 +209,7 @@ class Quartz{
 
 	public function MySQLinsert($table, $params){
 		$query = sprintf("INSERT INTO `%s_%s` (`%s`) VALUES (:%s)", MySQL_PREFIX, $table, implode( "`, `", array_keys($params) ), implode(", :", array_keys($params)));
-		$stmt = $this->config['mysql']->prepare($query);
+		$stmt = $this->mysql->prepare($query);
 		return $stmt->execute($params) && $stmt->closeCursor();
 	}
 

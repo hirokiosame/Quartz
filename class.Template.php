@@ -79,7 +79,7 @@ class Template{
 		ob_start(); ?>
 		<div class="wrapper">
 			<div class="section install">
-				<h2>Quartz Setup Wizard | Connection Established </h2>
+				<h2>Quartz Setup Wizard <span class="light">Connection Established</span></h2>
 				<div class="g60 center">
 					<p>Successfully connected to MySQL! However, permission was denied trying to create <b>config.php</b> in the Quartz directory. Copy and paste the code below into a plain text editor and save it as <b>config.php</b> in the Quartz folder.</p>
 					<br>
@@ -98,33 +98,44 @@ class Template{
 		ob_start(); ?>
 		<div class="wrapper">
 			<div class="section install">
-				<h2>Quartz Setup Wizard | Registration</h2>
+				<h2>Quartz Setup Wizard <span class="light">Registration</span></h2>
 
-				<form method="post" action="/install.php">
-				<table class="g50 center">
+				<form method="post" class="installer" action="/install.php">
+				<table class="g60 center">
 					<tr>
-						<td colspan="2">You have successfully created a configuration file! Create your admin account to get started!</td>
+						<td colspan="3">You have successfully created a configuration file! Create your admin account to get started!</td>
 					</tr>
 					<tr class="error error1" style="<?=isset($params['errors'])&&isset($params['errors']['error1'])?'display:table-row':''?>">
 						<td colspan="2"><?=isset($params['errors'])&&isset($params['errors']['error1'])?$params['errors']['error1']:''?></td>
 					</tr>
+					<tr class="error name"><td colspan="2"></td></tr>
+					<tr>
+						<td><input required autofocus type="fname" name="fname" placeholder="First" value="<?=isset($params['fname'])?htmlentities($params['fname'], ENT_QUOTES):''?>"></td>
+						<td><input required type="lname" name="lname" placeholder="Last" value="<?=isset($params['lname'])?htmlentities($params['lname'], ENT_QUOTES):''?>"></td>
+						<td>Enter your name.</td>
+					</tr>
 					<tr class="error email"><td colspan="2"></td></tr>
 					<tr>
-						<td><input required autofocus type="email" name="email" placeholder="Email" value="<?=isset($params['email'])?htmlentities($params['email'], ENT_QUOTES):''?>"></td>
-						<td>Enter your login email address.</td>
+						<td colspan="2"><input required type="email" name="email" placeholder="Email" value="<?=isset($params['email'])?htmlentities($params['email'], ENT_QUOTES):''?>"></td>
+						<td>Enter your email address.</td>
+					</tr>
+					<tr class="error username"><td colspan="2"></td></tr>
+					<tr>
+						<td colspan="2"><input required type="text" name="username" placeholder="Username" value="<?=isset($params['username'])?htmlentities($params['username'], ENT_QUOTES):''?>"></td>
+						<td>Enter your login username.</td>
 					</tr>
 					<tr class="error password1"><td colspan="2"></td></tr>
 					<tr>
-						<td><input required type="password" name="password1" placeholder="Password" pattern=".{6,}" value=""></td>
+						<td colspan="2"><input required type="password" name="password1" placeholder="Password" pattern=".{6,}" value="123456"></td>
 						<td>Choose a secure password of at least 6 characters.</td>
 					</tr>
 					<tr class="error password2"><td colspan="2"></td></tr>
 					<tr>
-						<td><input required type="password" name="password2" placeholder="Confirm Password" pattern=".{6,}" value=""></td>
+						<td colspan="2"><input required type="password" name="password2" placeholder="Confirm Password" pattern=".{6,}" value="123456"></td>
 						<td>Confirm your password.</td>
 					</tr>
 					<tr>
-						<td colspan="2"><input type="submit" value="Register Admin Account"></td>
+						<td colspan="3"><input type="submit" value="Register Admin Account"></td>
 					</tr>
 				</table>
 				</form>
@@ -138,9 +149,10 @@ class Template{
 		<div class="wrapper">
 			<div class="section install">
 				<h2>Installation Completed</h2>
-				<div class="g60 center">
+				<p class="g60 center">
 					Your admin account has been successfully registered! You will be logged in shortly...
-				</div>
+					<meta http-equiv="refresh" content="1; url=/home.php" />
+				</p>
 			</div>
 		</div>
 		<? return ob_get_clean();
