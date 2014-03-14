@@ -15,15 +15,24 @@ if(
 	isset($_POST['password']) && strlen($_POST['password'])>0
 ){
 
-
-	if( $Quartz->account([ 'email'=>$_POST['email'], 'password'=>$_POST['password'] ])->login() ){
-		header("Location: home.php");
+	// Attempt Login
+	if( $attempt = $Quartz->account([ 'email'=>$_POST['email'], 'password'=>$_POST['password'] ])->login() ){
+		header("Location: /home.php".(isset($_POST['ajax']) ? "?ajax=1" : "" ));
 	}
-	/*
-	print_r( $Quartz->MySQLselect("accounts", ) );
 
-	*/
+	// Return Message
+	$returnMessage =	[
+					'errors'	=>	[
+						'error1'	=> 'Error logging in... <a href="/forgot.php">Did you forget your password?</a>'
+					],
+					'inputs'	=> [
+						'email'		=> $_POST['email'],
+						'password'	=> ''
+					]
+				];
 
+	
+	print( json_encode($returnMessage) );
 
 }else{
 	include("_header.php");
@@ -34,24 +43,21 @@ if(
 				<h2>Quartz Login</h2>
 
 				<form method="post" action="/login.php">
-				<table class="g50 center">
+				<table class="g40 center">
 					<tr class="error error1" style="<?=isset($params['errors'])&&isset($params['errors']['error1'])?'display:table-row':''?>">
 						<td colspan="2"><?=isset($params['errors'])&&isset($params['errors']['error1'])?$params['errors']['error1']:''?></td>
 					</tr>
-					<tr class="error email"><td colspan="2"></td></tr>
 					<tr>
-						<td><input required autofocus type="email" name="email" placeholder="Email" value="<?=isset($params['email'])?htmlentities($params['email'], ENT_QUOTES):''?>">@bu.edu</td>
-					</tr>
-					<tr class="error password1"><td colspan="2"></td></tr>
-					<tr>
-						<td><input required type="password" name="password" placeholder="Password" pattern=".{6,}" value=""></td>
-					</tr>
-					<tr class="error password2"><td colspan="2"></td></tr>
-					<tr>
-						<td><input type="checkbox" name="remember" value="1"> Keep me logged in</td>
+						<td colspan="2"><div class="input-append"><input required autofocus type="email" name="email" placeholder="Email" value="<?=isset($params['email'])?htmlentities($params['email'], ENT_QUOTES):''?>"><span class="input-append">@bu.edu</span></div></td>
 					</tr>
 					<tr>
-						<td><input type="submit" value="Login"></td>
+						<td colspan="2"><input required type="password" name="password" placeholder="Password" pattern=".{6,}" value=""></td>
+					</tr>
+					<tr>
+						<td class="text-left"><label><input type="checkbox" name="remember" value="1"> Remember me</label></td>
+						<td width="50%"><input type="submit" value="Login"></td>
+					</tr>
+					<tr>
 					</tr>
 				</table>
 				</form>

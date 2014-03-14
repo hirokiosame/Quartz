@@ -33,12 +33,25 @@ class Account{
 					);
 
 		// Throw in Error Handlers
-		if( !$stmt = $this->mysql->prepare($query) ){ print("Error Preparing Query"); return false; }
-		if( !$stmt->execute($this->account) ){ print("Error Executing Query"); return false; }
+		//if( !$stmt = $this->mysql->prepare($query) ){ print("Error Preparing Query"); return false; }
+		//if( !$stmt->execute($this->account) ){ print("Error Executing Query"); return false; }
 
 		// Set to Account
-		if( !$this->account = $stmt->fetch(PDO::FETCH_ASSOC) ){ print("Error Fetching"); return false; }
+		//if( !$this->account = $stmt->fetch(PDO::FETCH_ASSOC) ){ print("Error Fetching"); return false; }
+		try{
+			// Prepare & Execute
+			$stmt = $this->mysql->prepare($query);
+			$stmt->execute($this->account);
 
+			// If No Result
+			if( !$this->account = $stmt->fetch(PDO::FETCH_ASSOC) ){
+				return false;
+			}
+
+		}catch(PDOException $e){
+			// Store in a Log File Instead...
+			print_r($e->getMessage());
+		}
 		// Set to Session
 		$_SESSION['id'] = $this->account['id'];
 
@@ -79,7 +92,6 @@ class Quartz{
 
 		// Check if Logged In
 		$this->account = (new Account($this->mysql, $_SESSION))->login();
-
 
 		// If You're not logged in, and page requires you to be logged in
 		if( !$this->account && $loggedIn  ){
@@ -128,14 +140,17 @@ class Quartz{
 			// Connect to MySQL
 			try {
 				$this->mysql = new PDO(sprintf("mysql:host=%s;dbname=%s", MySQL_HOST, MySQL_DB), MySQL_USER, MySQL_PASSWORD, array(
-					PDO::ATTR_PERSISTENT => true
+					
+					// Persistent Connections
+					PDO::ATTR_PERSISTENT => true,
+
+					// Throw Errors
+					PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
 				));
 
-				// Throw Errors
-				// Switch to Throw - Catch
-				$this->mysql->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
-
-			} catch (PDOException $e){}
+			} catch (PDOException $e){
+				print($e);
+			}
 
 
 			// Check that there are tables?

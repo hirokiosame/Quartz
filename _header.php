@@ -31,14 +31,7 @@
 				<li><a href="/logout.php">Logout</a></li>
 			<? }else{ ?>
 				<li><a href="/about.php">About</a></li>
-				<li><a class="login" href="#">Login</a></li>
-				<li class="login">
-					<form action="/install.php?step2" method="post">
-						<input type="email" placeholder="Email">
-						<input type="password" placeholder="Password">
-						<input type="submit" value="&#8594;">
-					</form>
-				</li>
+				<li><a href="/login.php">Login</a></li>
 			<? } ?>
 			</ul>
 		</div>

@@ -28,29 +28,41 @@ $(function(){
 
 				try{ data = JSON.parse(data); } catch(e){ return false; }
 
-				// If Error
-				if( data.hasOwnProperty('errors') ){
-					Object.keys(data['errors']).forEach(function(errClass){
+
+				// If Inputs
+				if( data.hasOwnProperty('inputs') ){
+
+					// I like to scope my iterations
+					Object.keys(data.inputs).forEach(function(inputName){
 
 						// Get Target
-						var target = $(".error."+errClass).children();
-						while( target.length ){
-							target = target.children();
-						}
-						target.end().first().text(data['errors'][errClass]).parents(".error").show(100);
-					});					
+						$("input[name='"+inputName+"']", $self).val(data.inputs[inputName]);
+					});
 				}
 
+				// If Error
+				if( data.hasOwnProperty('errors') ){
+					Object.keys(data.errors).forEach(function(errClass){
+
+						// Get Target -- Last Child
+						var target = $(".error."+errClass).children("td");
+						while( target.length ){ target = target.children("td"); }
+
+						// Using HTML instead of Text because sometimes there are links
+						target.end().first().html(data.errors[errClass]).parents(".error").show(100);
+					});
+				}
+
+				// If HTML
 				if( data.hasOwnProperty('html') ){
-
-					// If Sent back a new Page
-					history.pushState({}, null, $self.attr("action"));
-
 					var method = Object.keys(data['jQ'])[0];
 					$( data['jQ'][method] )[method]( data['html'] );
-
 				}
 
+				// If New URL
+				if( data.hasOwnProperty('url') ){
+					history.pushState({}, null, data['action']);
+				}
 			}
 		});
 	});

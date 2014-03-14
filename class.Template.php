@@ -1,7 +1,7 @@
 <?
 class Template{
 
-	public static function htmlWrap( $callback, $arguments = array() ){
+	public static function htmlWrap( $callback, $arguments = array(), &$Quartz = false ){
 		ob_start();
 		include('_header.php');
 		print( call_user_func_array($callback, $arguments) );
@@ -50,7 +50,7 @@ class Template{
 				</form>
 			</div>
 		</div>
-<?		return ob_get_clean();
+	<? return ob_get_clean();
 	}
 
 	public static function configFile( $params = array() ){
@@ -71,7 +71,7 @@ class Template{
 	// Password for MySQL User
 	define('MySQL_PASSWORD', '<?=isset($params['password'])?addslashes($params['password']):'password'?>');
 
-<?		return "<?\n".ob_get_clean()."?>";
+	<? return "<?\n".ob_get_clean()."?>";
 	}
 
 
@@ -91,7 +91,7 @@ class Template{
 				</div>
 			</div>
 		</div>
-<?		return ob_get_clean();
+		<? return ob_get_clean();
 	}
 
 	public static function install_s2( $params = array() ){
@@ -130,7 +130,7 @@ class Template{
 				</form>
 			</div>
 		</div>
-<?		return ob_get_clean();
+		<? return ob_get_clean();
 	}
 
 	public static function install_done( $params = array() ){
@@ -143,10 +143,56 @@ class Template{
 				</div>
 			</div>
 		</div>
-<?		return ob_get_clean();
+		<? return ob_get_clean();
 	}
 
 
+
+
+
+
+	public static function home( $params = array() ){
+		ob_start(); ?>
+		<div class="wrapper">
+			<div class="section">
+				<h2>Personal</h2>
+				<hr class="soften">
+				<table class="g70 center">
+					<form>
+					<tr>
+						<td><input type="text" name="sectiontitle" placeholder="Section Title"></td>
+					</tr>
+					<tr>
+						<td><textarea name="sectioncontent" placeholder="Section Content"></textarea></td>
+					</tr>
+					<tr>
+						<td><input type="submit" value="Save"></td>
+					</tr>
+					</form>
+					<tr>
+						<td><a class="add">+ Add Section</a></td>
+					</tr>
+				</table>
+			</div>
+
+			<div class="section">
+				<h2>Courses</h2>
+				<hr class="soften">
+				<table class="g70 center">
+					<tr>
+						<td><input type="text" name="sectiontitle" placeholder="Course Title"></td>
+					</tr>
+					<tr>
+						<td>HMMMMMMM</td>
+					</tr>
+					<tr>
+						<td><a class="add">+ Add Course</a></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	<?	return ob_get_clean();
+	}
 
 
 }
