@@ -110,7 +110,7 @@ if( isset($Quartz->config['mysql']) ){
 																								`type` ENUM('normal', 'admin') DEFAULT 'normal', # Normal User or Admin user
 
 																								PRIMARY KEY(`id`, `email`)
-																							) ENGINE=MYISAM;")
+																							) ENGINE=InnoDB;")
 	){
 
 		// Failed to Create Table -- MySQL Permissions?

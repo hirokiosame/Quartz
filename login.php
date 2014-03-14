@@ -3,7 +3,7 @@
 require_once("class.Quartz.php");
 
 // Get Config
-$Quartz = new Quartz(True, False);
+$Quartz = new Quartz(True, 0);
 
 // Make Sure Not Logged In
 if( $Quartz->account ){

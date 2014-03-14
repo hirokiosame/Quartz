@@ -33,11 +33,6 @@ class Account{
 					);
 
 		// Throw in Error Handlers
-		//if( !$stmt = $this->mysql->prepare($query) ){ print("Error Preparing Query"); return false; }
-		//if( !$stmt->execute($this->account) ){ print("Error Executing Query"); return false; }
-
-		// Set to Account
-		//if( !$this->account = $stmt->fetch(PDO::FETCH_ASSOC) ){ print("Error Fetching"); return false; }
 		try{
 			// Prepare & Execute
 			$stmt = $this->mysql->prepare($query);
@@ -47,11 +42,15 @@ class Account{
 			if( !$this->account = $stmt->fetch(PDO::FETCH_ASSOC) ){
 				return false;
 			}
-
 		}catch(PDOException $e){
 			// Store in a Log File Instead...
 			print_r($e->getMessage());
 		}
+
+		// Update Last Active
+		$this->mysql->query("UPDATE `".MySQL_PREFIX."_accounts` SET `lastActive` = CURRENT_TIMESTAMP WHERE `id` = ".$this->account['id']);
+
+
 		// Set to Session
 		$_SESSION['id'] = $this->account['id'];
 
@@ -70,7 +69,7 @@ class Account{
 
 class Quartz{
 
-	function __construct($checkInstall = True, $loggedIn = False){
+	function __construct($checkInstall = True, $priviliges = 0){
 
 		// Version Check
 		if( version_compare(PHP_VERSION, '5.3.1', '<') ){
@@ -93,16 +92,21 @@ class Quartz{
 		// Check if Logged In
 		$this->account = (new Account($this->mysql, $_SESSION))->login();
 
-		// If You're not logged in, and page requires you to be logged in
-		if( !$this->account && $loggedIn  ){
-			header("Location: /login.php");
-		}
 
 		// If Page Requires you to be Logged out, but you're logged in
-		if( !$loggedIn && $this->account ){
+		if( $priviliges === 0 && $this->account ){
 			header("Location: /home.php");
 		}
 
+		// If You're not logged in, and page requires you to be logged in
+		if( $priviliges === 1 && !$this->account ){
+			header("Location: /login.php");
+		}
+
+		// You must be an admin
+		if( $priviliges === 2 && $this->account && $this->account['type'] !== 'admin' ){
+			header("Location: /home.php");
+		}
 
 		// Get Traffic
 		//print_r($this->getTraffic());
