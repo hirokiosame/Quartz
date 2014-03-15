@@ -17,7 +17,11 @@ class Account{
 		// No Credentials to Login With
 		if( count($this->account)==0 ){ return false; }
 
-		isset($this->account['password']) ? $this->account['password'] = hash('sha512', $this->account['password']) :0;
+		// Don't Select By Password
+		if( isset($this->account['password']) ){
+			$password = $this->account['password'];
+			unset($this->account['password']);
+		}
 
 		// Prepare Query
 		$query =	sprintf(
@@ -45,6 +49,11 @@ class Account{
 		}catch(PDOException $e){
 			// Store in a Log File Instead...
 			//print_r($e->getMessage());
+			return false;
+		}
+
+		// If Passwords Don't Match
+		if( isset($password) && !password_verify($password, $this->account['password']) ){
 			return false;
 		}
 

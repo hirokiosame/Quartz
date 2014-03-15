@@ -42,6 +42,9 @@ $(function(){
 			success: function(data){
 				console.log(data);
 
+				// Activate Button
+				$("input[type='submit']", $self).attr('disabled', false);
+
 				// Confirm JSON Data
 				try{ data = JSON.parse(data); } catch(e){ return false; }
 

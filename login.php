@@ -11,12 +11,12 @@ if( $Quartz->account ){
 }
 
 if(
-	isset($_POST['email']) && strlen($_POST['email'])>0 &&
+	isset($_POST['username']) && strlen($_POST['username'])>0 &&
 	isset($_POST['password']) && strlen($_POST['password'])>0
 ){
 
 	// Attempt Login
-	if( $attempt = $Quartz->account([ 'email'=>$_POST['email'], 'password'=>$_POST['password'] ])->login() ){
+	if( $attempt = $Quartz->account([ 'username'=>$_POST['username'], 'password'=>$_POST['password'] ])->login() ){
 		header("Location: /home.php".(isset($_POST['ajax']) ? "?ajax=1" : "" ));
 	}
 
@@ -26,7 +26,7 @@ if(
 						'error1'	=> 'Error logging in... <a href="/forgot.php">Did you forget your password?</a>'
 					],
 					'inputs'	=> [
-						'email'		=> $_POST['email'],
+						'username'		=> $_POST['username'],
 						'password'	=> ''
 					]
 				];
@@ -48,7 +48,7 @@ if(
 						<td colspan="2"><?=isset($params['errors'])&&isset($params['errors']['error1'])?$params['errors']['error1']:''?></td>
 					</tr>
 					<tr>
-						<td colspan="2"><div class="input-append"><input required autofocus type="email" name="email" placeholder="Email" value="<?=isset($params['email'])?htmlentities($params['email'], ENT_QUOTES):''?>"><span class="input-append">@bu.edu</span></div></td>
+						<td colspan="2"><input required autofocus type="text" name="username" placeholder="Username" value="<?=isset($params['username'])?htmlentities($params['username'], ENT_QUOTES):''?>"></td>
 					</tr>
 					<tr>
 						<td colspan="2"><input required type="password" name="password" placeholder="Password" pattern=".{6,}" value=""></td>
