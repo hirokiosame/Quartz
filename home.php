@@ -9,7 +9,15 @@ $Quartz = new Quartz(True, 1);
 print(
 	isset($_GET['ajax']) ?
 		json_encode([
-				'jQ' => ['replaceWith' => ['.wrapper'=>Template::home()] ],
+			'url' => 'home.php',
+			'jQ' => [
+				'replaceWith' => [
+					'.wrapper'=>Template::home()
+				],
+				'html' => [
+					'ul.links'=>Template::headerLinks($Quartz)
+				]
+			]
 		]) :
 		Template::htmlWrap("Template::home", [], $Quartz)
 );

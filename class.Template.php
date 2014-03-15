@@ -9,6 +9,16 @@ class Template{
 		return ob_get_clean();
 	}
 
+	public static function headerLinks( &$Quartz ){
+		ob_start(); ?>
+			<li><a href="/home.php">Home</a></li>
+			<li><a href="/website.php?id=<?=$Quartz->account['id']?>">Website</a></li>
+			<li><a href="/settings.php">Settings</a></li>
+			<? if($Quartz->account['type'] === 'admin'){ ?><li><a href="/admin/">Admin CP</a></li><? } ?>
+			<li><a href="/logout.php">Logout</a></li>
+	<? return ob_get_clean();
+	}
+
 	public static function install_s1( $params = array() ){
 		ob_start(); ?>
 		<div class="wrapper">

@@ -84,7 +84,7 @@ $(function(){
 
 				// If New URL
 				if( data.hasOwnProperty('url') ){
-					history.pushState({}, null, data['action']);
+					history.pushState({}, null, data.url);
 				}
 			}
 		});

@@ -70,6 +70,10 @@ class Account{
 
 	}
 	public function register(){
+
+		// Make sure Email/Username/Password is set
+
+		// Make sure Email or Username don't already exist
 	
 		$query = sprintf(
 					"INSERT INTO `%s_%s` (`%s`) VALUES (:%s)",
