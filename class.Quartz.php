@@ -305,8 +305,8 @@ class Quartz{
 	function __construct($checkInstall = True, $priviliges = 0){
 
 		// Version Check
-		if( version_compare(PHP_VERSION, '5.5.3', '<') ){
-			die('Your host needs to use PHP 5.5.3 or higher to run this version of Quartz!');
+		if( version_compare(PHP_VERSION, '5.5.0', '<') ){
+			die('Your host needs to use PHP 5.5.0 or higher to run this version of Quartz!');
 		}
 
 		// Start Session

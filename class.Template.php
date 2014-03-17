@@ -149,7 +149,7 @@ class Template{
 		ob_start(); ?>
 		<div class="wrapper">
 			<div class="section install">
-				<h2>Quartz Setup Wizard <span class="light">Registration</span></h2>
+				<h2>Quartz Setup Wizard <span class="light">Admin Registration</span></h2>
 
 				<form method="post" class="installer" action="/install.php">
 				<?=Template::registrationTable($params)?>
