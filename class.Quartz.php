@@ -2,12 +2,78 @@
 
 //namespace Quartz;
 
+function validateInputs( $arr, $attrs ){
+	foreach( $attrs as $attr ){
+		if( !isset($arr[$attr]) || strlen($arr[$attr])===0 ){ return false; }
+	}
+	return true;
+}
+
 
 class Account{
+	public $account = false;
+	public $errors = [];
 
 	function __construct(&$mysql, $account = false){
 		$this->mysql = $mysql;
 		$this->account = $account;
+	}
+
+
+	// MySQL Functions
+
+	private function prepareSELECT($table, $conditions){
+
+		// Prepare Query
+		$query =	sprintf(
+						"SELECT * FROM `%s_%s` WHERE %s LIMIT 1",
+						MySQL_PREFIX,
+						$table,
+						implode(
+							' AND ',
+							array_map(function($condition){
+								return sprintf("`%s` %s :%s", $condition[0], $condition[1], $condition[0]);
+							}, $conditions)
+						)
+					);
+		print($query);
+	}
+
+	public function checkExists($table, $conditions){
+
+		$query =	sprintf(
+						"SELECT COUNT(*) FROM `%s_%s` WHERE %s LIMIT 1",
+						MySQL_PREFIX,
+						$table,
+						implode(
+							' AND ',
+							array_map(function($condition){
+								return sprintf("`%s` %s :%s", $condition[0], $condition[1], $condition[0]);
+							}, $conditions)
+						)
+					);
+
+
+		// Throw in Error Handlers
+		try{
+			// Prepare & Execute
+			$stmt = $this->mysql->prepare($query);
+			$stmt->execute( array_reduce($conditions, function($result, $item){
+				$result[$item[0]] = $item[2];
+				return $result;
+			}, []) );
+
+			// If No Result
+			if( !$result = $stmt->fetch(PDO::FETCH_ASSOC) ){
+				return false;
+			}
+			$stmt->closeCursor();
+			return $result['COUNT(*)'];
+		}catch(PDOException $e){
+			// Store in a Log File Instead...
+			//print_r($e->getMessage());
+			return false;
+		}
 	}
 
 
@@ -57,6 +123,8 @@ class Account{
 			return false;
 		}
 
+		// If Not Activated
+
 		// Update Last Active
 		$this->mysql->query("UPDATE `".MySQL_PREFIX."_accounts` SET `lastActive` = CURRENT_TIMESTAMP WHERE `id` = ".$this->account['id']);
 
@@ -69,19 +137,113 @@ class Account{
 		return $this->account;
 
 	}
-	public function register(){
 
-		// Make sure Email/Username/Password is set
 
-		// Make sure Email or Username don't already exist
-	
-		$query = sprintf(
-					"INSERT INTO `%s_%s` (`%s`) VALUES (:%s)",
-					MySQL_PREFIX,
-					"accounts",
-					implode( "`, `", array_keys($this->account) ),
-					implode(", :", array_keys($this->account))
-				);
+
+	public function register($validEmail = true, $setSession = true){
+
+		// Email MUST be set
+		if(
+			!isset($this->account['email']) ||
+			!filter_var($this->account['email'], FILTER_VALIDATE_EMAIL)
+		){
+			$this->errors['email'] = "Email must be valid!";
+			return $this;
+		}
+
+		// Password Validation
+		if( validateInputs($this->account, ['password1','password2']) ){
+
+			// Length
+			if( strlen($this->account['password1'])<6 ){
+				$this->errors['password1'] = 'Passwords must be at least 6 characters!';
+				return $this;
+			}
+
+			// Not Matching
+			if( $this->account['password1'] !== $this->account['password2'] ){
+				$this->errors['password2'] = 'Passwords must match!';
+				return $this;
+			}
+
+			// Hash if Valid
+			$this->account['password'] = password_hash($this->account['password1'], PASSWORD_BCRYPT);
+			unset($this->account['password1'], $this->account['password2']);
+		}
+
+
+		// MySQL Checks
+		// Username Must Be Unique
+		if(
+			isset($this->account['username']) &&
+			$this->checkExists("accounts", [
+				['username', '=', $this->account['username']]
+			])
+		){
+			$this->errors['username'] = 'Username is already in use. Please choose another one.';
+			return $this;
+		}
+
+
+		// Get By Email
+		$query = sprintf( "SELECT id, registered FROM `%s_accounts` WHERE `email` = :email LIMIT 1", MySQL_PREFIX);
+
+		// Throw in Error Handlers
+		$stmt = $this->mysql->prepare($query);
+		$stmt->execute(['email'=>$this->account['email']]);
+
+		
+		// Requires Valid Email
+		if( $validEmail ){
+
+			// Invalid Email
+			if( $stmt->rowCount() === 0 ){
+				$this->errors['email'] = 'Email is not valid. Contact the administrator to get your email validated.';
+				return $this;
+			}
+
+			$account = $stmt->fetch(PDO::FETCH_ASSOC);
+
+			// Already registered
+			if( $account['registered'] !== '0000-00-00 00:00:00' ){
+				$this->errors['email'] = 'Email is already in use. Forgot Password?';
+				return $this;
+			}
+
+			// Update Row
+			$query = sprintf(
+						"UPDATE `%s_accounts` SET %s WHERE `id` = %s",
+						MySQL_PREFIX,
+						implode(
+							', ',
+							array_map(function($elem){
+								return sprintf("%s = :%s", $elem, $elem);
+							}, array_keys($this->account))
+						),
+						$account['id']
+					);
+
+			// Set Registration Date
+			//$this->account['registered'] = date('Y-m-d H:i:s', time());
+
+			// Set Activation Hash
+		}else{
+
+			// Make sure it doesn't already exist
+			if( $stmt->rowCount() !== 0 ){
+				$this->errors['email'] = 'Email already in use.';
+				return false;
+			}
+
+			// Just Insert
+			$query = sprintf(
+						"INSERT INTO `%s_%s` (`%s`) VALUES (:%s)",
+						MySQL_PREFIX,
+						"accounts",
+						implode( "`, `", array_keys($this->account) ),
+						implode( ", :", array_keys($this->account) )
+					);
+		}
 
 		try{
 			// Prepare & Execute
@@ -90,14 +252,49 @@ class Account{
 			$stmt->closeCursor();
 		}catch(PDOException $e){
 			// Store in a Log File Instead...
-			//print_r($e->getMessage());
-			return false;
+			print_r($e->getMessage());
+			$this->errors['registeration'] = "Something went wrong! Please try again later.";
+
+			return $this;
 		}
 
 		// Set to Session
-		$_SESSION['id'] = $this->mysql->lastInsertId();
+		//$setSession && $_SESSION['id'] = ( isset($account) ? $account['id'] : $this->mysql->lastInsertId() );
 
-		return $this->account;
+		return $this;
+	
+
+
+		/*
+		// Email Must Be Unique
+		if(
+			$this->checkExists("accounts", [
+				['registered', '!=', '0'],
+				['email', '=', $this->account['email']]
+			])
+		){
+			$this->errors['email'] = 'Email is already in use. Forgot Password?';
+			return $this;
+		}
+
+		// Email Must Be Valid
+		if(
+			// If Not Validation, but registration
+			!$validate &&
+
+			$this->checkExists("accounts", [
+				['registered', '=', '0'],
+				[ 'email', '=', $this->account['email']]
+			])
+		){
+			$this->errors['email'] = 'Email is not valid. Contact the administrator to get your email validated.';
+			return $this;
+		}
+		*/
+
+
+
+
 	}
 	
 }
@@ -119,7 +316,7 @@ class Quartz{
 		$this->getConfig();
 
 		// If MySQL Connection fails -> Send to Installation Wizard
-		if( $checkInstall && ($this->config['status'] === 0 || !isset($this->mysql) || isset($this->mysql->tables_error) ) ){
+		if( $checkInstall && ($this->config['status'] === 0 || !isset($this->mysql) || isset($this->mysql->tables_error) || isset($this->noAdmin) ) ){
 			header("Location: /install.php");
 		}
 		//session_destroy();
@@ -194,12 +391,19 @@ class Quartz{
 
 
 			// Check that there are tables?
-			if(
-				isset($this->mysql) &&
-				$this->mysql->query("SHOW TABLES WHERE `Tables_in_".MySQL_DB."` LIKE '".MySQL_PREFIX."_accounts' OR `Tables_in_".MySQL_DB."` LIKE '".MySQL_PREFIX."_accounts'")->rowCount() !== 1
-			){
-				$this->mysql->tables_error = 'Tables have not been setup yet.';
+			if( isset($this->mysql) ){
+
+				if( $this->mysql->query("SHOW TABLES WHERE `Tables_in_".MySQL_DB."` LIKE '".MySQL_PREFIX."_accounts' OR `Tables_in_".MySQL_DB."` LIKE '".MySQL_PREFIX."_accounts'")->rowCount() !== 1 ){
+					$this->mysql->tables_error = 'Tables have not been setup yet.';
+				}else
+
+				// Make sure admin account exists
+				if( $this->mysql->query("SELECT COUNT(*) FROM `".MySQL_PREFIX."_accounts` WHERE `type`='admin'")->fetch(PDO::FETCH_ASSOC)['COUNT(*)'] === '0' ){
+					$this->noAdmin = true;
+				}
+
 			}
+
 
 			/*
 			$this->config['mysqli'] = @new mysqli( MySQL_HOST, MySQL_USER, MySQL_PASSWORD, MySQL_DB );

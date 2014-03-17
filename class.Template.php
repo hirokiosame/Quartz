@@ -1,7 +1,7 @@
 <?
 class Template{
 
-	public static function htmlWrap( $callback, $arguments = array(), &$Quartz = false ){
+	public static function htmlWrap( $callback, $arguments = [], &$Quartz = false ){
 		ob_start();
 		include('_header.php');
 		print( call_user_func_array($callback, $arguments) );
@@ -19,7 +19,7 @@ class Template{
 	<? return ob_get_clean();
 	}
 
-	public static function install_s1( $params = array() ){
+	public static function install_s1( $params = [] ){
 		ob_start(); ?>
 		<div class="wrapper">
 			<div class="section install">
@@ -63,7 +63,7 @@ class Template{
 	<? return ob_get_clean();
 	}
 
-	public static function configFile( $params = array() ){
+	public static function configFile( $params = [] ){
 		ob_start();
 		?>
 	// Host MySQL is located on
@@ -85,7 +85,7 @@ class Template{
 	}
 
 
-	public static function install_s1_denied( $params = array() ){
+	public static function install_s1_denied( $params = [] ){
 		ob_start(); ?>
 		<div class="wrapper">
 			<div class="section install">
@@ -104,57 +104,61 @@ class Template{
 		<? return ob_get_clean();
 	}
 
-	public static function install_s2( $params = array() ){
+
+	public static function registrationTable( $params = [] ){
+		ob_start(); ?>
+		<table class="g60 center">
+			<tr class="error unknown" style="<?=isset($params['errors'])&&isset($params['errors']['unknown'])?'display:table-row':''?>">
+				<td colspan="2"><?=isset($params['errors'])&&isset($params['errors']['unknown'])?$params['errors']['unknown']:''?></td>
+			</tr>
+			<tr class="error name"><td colspan="3"></td></tr>
+			<tr>
+				<td><input required autofocus type="fname" name="fname" placeholder="First" value="<?=isset($params['fname'])?htmlentities($params['fname'], ENT_QUOTES):''?>"></td>
+				<td><input required type="lname" name="lname" placeholder="Last" value="<?=isset($params['lname'])?htmlentities($params['lname'], ENT_QUOTES):''?>"></td>
+				<td>Enter your name.</td>
+			</tr>
+			<tr class="error email"><td colspan="3"></td></tr>
+			<tr>
+				<td colspan="2"><input required type="email" name="email" placeholder="Email" value="<?=isset($params['email'])?htmlentities($params['email'], ENT_QUOTES):''?>"></td>
+				<td>Enter your email address.</td>
+			</tr>
+			<tr class="error username"><td colspan="3"></td></tr>
+			<tr>
+				<td colspan="2"><input required type="text" name="username" placeholder="Username" value="<?=isset($params['username'])?htmlentities($params['username'], ENT_QUOTES):''?>"></td>
+				<td>Enter your login username.</td>
+			</tr>
+			<tr class="error password1"><td colspan="3"></td></tr>
+			<tr>
+				<td colspan="2"><input required type="password" name="password1" placeholder="Password" pattern=".{6,}" value="123456"></td>
+				<td>Choose a secure password of at least 6 characters.</td>
+			</tr>
+			<tr class="error password2"><td colspan="3"></td></tr>
+			<tr>
+				<td colspan="2"><input required type="password" name="password2" placeholder="Confirm Password" pattern=".{6,}" value="123456"></td>
+				<td>Confirm your password.</td>
+			</tr>
+			<tr>
+				<td colspan="3"><input type="submit" value="Register"></td>
+			</tr>
+		</table>
+		<? return ob_get_clean();
+	}
+
+	public static function install_s2( $params = [] ){
 		ob_start(); ?>
 		<div class="wrapper">
 			<div class="section install">
 				<h2>Quartz Setup Wizard <span class="light">Registration</span></h2>
 
 				<form method="post" class="installer" action="/install.php">
-				<table class="g60 center">
-					<tr>
-						<td colspan="3">You have successfully created a configuration file! Create your admin account to get started!</td>
-					</tr>
-					<tr class="error error1" style="<?=isset($params['errors'])&&isset($params['errors']['error1'])?'display:table-row':''?>">
-						<td colspan="2"><?=isset($params['errors'])&&isset($params['errors']['error1'])?$params['errors']['error1']:''?></td>
-					</tr>
-					<tr class="error name"><td colspan="2"></td></tr>
-					<tr>
-						<td><input required autofocus type="fname" name="fname" placeholder="First" value="<?=isset($params['fname'])?htmlentities($params['fname'], ENT_QUOTES):''?>"></td>
-						<td><input required type="lname" name="lname" placeholder="Last" value="<?=isset($params['lname'])?htmlentities($params['lname'], ENT_QUOTES):''?>"></td>
-						<td>Enter your name.</td>
-					</tr>
-					<tr class="error email"><td colspan="2"></td></tr>
-					<tr>
-						<td colspan="2"><input required type="email" name="email" placeholder="Email" value="<?=isset($params['email'])?htmlentities($params['email'], ENT_QUOTES):''?>"></td>
-						<td>Enter your email address.</td>
-					</tr>
-					<tr class="error username"><td colspan="2"></td></tr>
-					<tr>
-						<td colspan="2"><input required type="text" name="username" placeholder="Username" value="<?=isset($params['username'])?htmlentities($params['username'], ENT_QUOTES):''?>"></td>
-						<td>Enter your login username.</td>
-					</tr>
-					<tr class="error password1"><td colspan="2"></td></tr>
-					<tr>
-						<td colspan="2"><input required type="password" name="password1" placeholder="Password" pattern=".{6,}" value="123456"></td>
-						<td>Choose a secure password of at least 6 characters.</td>
-					</tr>
-					<tr class="error password2"><td colspan="2"></td></tr>
-					<tr>
-						<td colspan="2"><input required type="password" name="password2" placeholder="Confirm Password" pattern=".{6,}" value="123456"></td>
-						<td>Confirm your password.</td>
-					</tr>
-					<tr>
-						<td colspan="3"><input type="submit" value="Register Admin Account"></td>
-					</tr>
-				</table>
+				<?=$this->registrationTable($params)?>
 				</form>
 			</div>
 		</div>
 		<? return ob_get_clean();
 	}
 
-	public static function install_done( $params = array() ){
+	public static function install_done( $params = [] ){
 		ob_start(); ?>
 		<div class="wrapper">
 			<div class="section install">
@@ -170,12 +174,59 @@ class Template{
 
 
 
-
-
-
-	public static function home( $params = array() ){
+	public static function register( $params = [] ){
 		ob_start(); ?>
 		<div class="wrapper">
+			<div class="section install">
+				<h2>Quartz <span class="light">Registration</span></h2>
+
+				<form method="post" action="/register.php">
+				<?=Template::registrationTable($params)?>
+				</form>
+			</div>
+		</div>
+		<? return ob_get_clean();
+	}
+
+
+	public static function home( $params = [] ){
+		ob_start(); ?>
+		<div class="wrapper">
+			<div class="section">
+				<h2>Web Pages</h2>
+				<hr class="soften">
+
+				<table class="g70 center">
+					<form>
+					<tr>
+						<td>Active/Inactive</td>
+						<th><input type="text" value="Webpage Name"></th>
+					</tr>
+					<tr>
+						<td></td>
+						<th>Webpage Title</th>
+					</tr>
+					</form>
+				</table>
+
+				<table class="g70 center">
+					<form>
+					<tr>
+						<td><input type="text" name="sectiontitle" placeholder="Section Title"></td>
+					</tr>
+					<tr>
+						<td><textarea name="sectioncontent" placeholder="Section Content"></textarea></td>
+					</tr>
+					<tr>
+						<td><input type="submit" value="Save"></td>
+					</tr>
+					</form>
+					<tr>
+						<td><a class="add">+ Add Section</a></td>
+					</tr>
+				</table>
+			</div>
+
 			<div class="section">
 				<h2>Personal</h2>
 				<hr class="soften">

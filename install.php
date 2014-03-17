@@ -14,11 +14,10 @@ if(
 	// Step 1a - Config File Creation
 	if(
 		// Check If Input Exists
-		isset( $_POST['host'] ) && strlen( $_POST['host'] )>0			&&
-		isset( $_POST['database'] ) && strlen( $_POST['database'] )>0	&&
-		isset( $_POST['prefix'] ) && strlen( $_POST['prefix'] )>0		&&
-		isset( $_POST['username'] ) && strlen( $_POST['username'] )>0	&&
-		isset( $_POST['password'] ) && strlen( $_POST['password'] )>0
+		validateInputs(
+			$_POST,
+			[ 'host', 'database', 'prefix', 'username', 'password' ]
+		)
 	){
 
 		// Try MySQL Connection
@@ -97,20 +96,23 @@ if( isset($Quartz->mysql) ){
 		 isset($Quartz->mysql->tables_error) &&
 
 		// Attempt Making Table
-		!$Quartz->mysql->query("CREATE TABLE IF NOT EXISTS `".MySQL_PREFIX."_accounts`	(
-																								`id`	INT UNSIGNED NOT NULL AUTO_INCREMENT,
-																								`email` VARCHAR(50) NOT NULL,
-																								`username` VARCHAR(50) NOT NULL,
-																								`fname` VARCHAR(30) NOT NULL,
-																								`lname` VARCHAR(30) NOT NULL,
-																								`password` CHAR(60) CHARACTER SET latin1 COLLATE latin1_bin,
-																								`registered` TIMESTAMP NOT NULL DEFAULT 0, #CURRENT_TIMESTAMP, # 0 - Unregistered; Timestamp - Date Activated
-																								`activated` TIMESTAMP NOT NULL DEFAULT 0, # 0 - Unactivated; Timestamp - Date Activated
-																								`lastActive` TIMESTAMP NOT NULL DEFAULT 0, # 0 - Never Logged In; Timestamp - Date Last Active
-																								`type` ENUM('normal', 'admin') DEFAULT 'normal', # Normal User or Admin user
+		!$Quartz->mysql->query(
+			"CREATE TABLE IF NOT EXISTS `".MySQL_PREFIX."_accounts`	(
+				`id`	INT UNSIGNED NOT NULL AUTO_INCREMENT,
+				`email` VARCHAR(50) NOT NULL, UNIQUE INDEX(`email`),
+				`username` VARCHAR(50) NOT NULL, UNIQUE INDEX(`username`),
+				`fname` VARCHAR(30) NOT NULL,
+				`lname` VARCHAR(30) NOT NULL,
+				`password` CHAR(60) CHARACTER SET latin1 COLLATE latin1_bin,
+				`registered` TIMESTAMP NOT NULL DEFAULT 0, #CURRENT_TIMESTAMP, # 0 - Unregistered; Timestamp - Date Activated
+				`activated` TIMESTAMP NOT NULL DEFAULT 0, # 0 - Unactivated; Timestamp - Date Activated
+				`lastActive` TIMESTAMP NOT NULL DEFAULT 0, # 0 - Never Logged In; Timestamp - Date Last Active
+				`activationHash` BINARY(16), # random md5 hash
+				`type` ENUM('normal', 'admin') DEFAULT 'normal', # Normal User or Admin user
 
-																								PRIMARY KEY(`id`, `email`, `username`)
-																							) ENGINE=InnoDB;")
+				PRIMARY KEY(`id`)
+			) ENGINE=InnoDB;"
+		)
 	){
 
 		// Failed to Create Table -- MySQL Permissions?
@@ -119,89 +121,52 @@ if( isset($Quartz->mysql) ){
 	}else
 
 	// No Admin Account Created Yet
-	if( $Quartz->mysql->query("SELECT COUNT(*) FROM `".MySQL_PREFIX."_accounts` WHERE `type`='admin'")->fetch(PDO::FETCH_ASSOC)['COUNT(*)'] == 0 ){
+	if( $Quartz->mysql->query("SELECT COUNT(*) FROM `".MySQL_PREFIX."_accounts` WHERE `type`='admin'")->fetch(PDO::FETCH_ASSOC)['COUNT(*)'] === '0' ){
 
 
-		function validateInputs( $arr, $attrs ){
-			foreach( $attrs as $attr ){
-				if( !isset($arr[$attr]) || strlen($arr[$attr])===0 ){ return false; }
-			}
-			return true;
-		}
+		if( validateInputs(
+			$_POST,
+			[ 'fname', 'lname', 'email', 'username', 'password1', 'password2']
+		) ){
 
-		
+			// Try Register
+			$register = (new Account($Quartz->mysql, [
+							'fname' => $_POST['fname'],
+							'lname' => $_POST['lname'],
+							'username' => $_POST['username'],
+							'email' => $_POST['email'],
+							'password1' => $_POST['password1'],
+							'password2' => $_POST['password2'],
+							'type' => 'admin',
+							'registered' => date('Y-m-d H:i:s', time()),
+							'activated' => date('Y-m-d H:i:s', time())
+						]))->register();
 
+			// If Errors
+			if( count($register->errors)>0 ){
 
-		if(
-			validateInputs(
-				$_POST,
-				[ 'fname', 'lname', 'email', 'username', 'password1', 'password2']
-			)
-		){
+				// Return Message
+				print( json_encode([
+					'errors'	=>	$register->errors,
 
-			// Return Message
-			$returnMessage =	[
-							'errors'	=>	[],
-							// Encoded Here incase ajax isn't supported
-							'inputs'	=> [
-								'fname' => $_POST['fname'],
-								'lname' => $_POST['lname'],
-								'email' => $_POST['email'],
-								'username' => $_POST['username']
-							]
-						];
+					// Encoded Here incase ajax isn't supported
+					'inputs'	=> [
+						'fname' => $_POST['fname'],
+						'lname' => $_POST['lname'],
+						'email' => $_POST['email'],
+						'username' => $_POST['username'],
+						'password1' => '',	//For Ajax
+						'password2' => ''
+					]
+				]) );
 
-			// Validation
-
-			// Make Sure Email is Valid
-			if( !filter_var($_POST['email'], FILTER_VALIDATE_EMAIL) ){
-				$returnMessage['errors']['email'] = "Email must be valid!";
-			}
-
-			// We Don't Need to Make sure the username is available because it's the first one
-			// Make Sure Username is Available
-			//print_r( $Quartz->MySQLselect('accounts', ['username'=> $_POST['username']]) );
-
-
-			// Make Sure Password Matches
-			if( strlen($_POST['password1'])<6 ){
-				$returnMessage['errors']['password1'] = 'Passwords must be at least 6 characters!';
-				$returnMessage['inputs']['password1'] = '';
-			}
-
-			// Make Sure Password Matches
-			if( $_POST['password1'] !== $_POST['password2'] ){
-				$returnMessage['errors']['password2'] = 'Passwords must match!';
-				$returnMessage['inputs']['password2'] = '';
-			}
-
-
-			// Register
-			if( 
-				count($returnMessage['errors']) === 0 &&	// No errors
-				
-				// Success Registering
-				(new Account($Quartz->mysql, [
-												'fname' => $_POST['fname'],
-												'lname' => $_POST['lname'],
-												'username' => $_POST['username'],
-												'email' => $_POST['email'],
-												'password' => password_hash($_POST['password1'], PASSWORD_BCRYPT),
-												'type' => 'admin',
-												'registered' => date('Y-m-d H:i:s', time()),
-												'activated' => date('Y-m-d H:i:s', time())
-											]))->register()
-			){
-				
+			}else{
 				print( isset($_POST['ajax']) ?
 					json_encode([
 						'jQ' => ['replaceWith' => ['.wrapper' => Template::install_done()]]
 					]) :
 					Template::htmlWrap("Template::install_done")
 				);
-			}else{
-				$returnMessage['errors']['registeration'] = "Something went wrong! Please try again later.";
-				print( json_encode($returnMessage) );
 			}
 
 		}else{

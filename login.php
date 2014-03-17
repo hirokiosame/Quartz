@@ -5,15 +5,8 @@ require_once("class.Quartz.php");
 // Get Config
 $Quartz = new Quartz(True, 0);
 
-// Make Sure Not Logged In
-if( $Quartz->account ){
-	header("Location: home.php");
-}
 
-if(
-	isset($_POST['username']) && strlen($_POST['username'])>0 &&
-	isset($_POST['password']) && strlen($_POST['password'])>0
-){
+if( validateInputs( $_POST, ['username', 'password'] ) ){
 
 	// Attempt Login
 	if( $attempt = $Quartz->account([ 'username'=>$_POST['username'], 'password'=>$_POST['password'] ])->login() ){
@@ -40,7 +33,7 @@ if(
 
 		<div class="wrapper">
 			<div class="section">
-				<h2>Quartz Login</h2>
+				<h2>Quartz <span class="light">Login</span></h2>
 
 				<form method="post" action="/login.php">
 				<table class="g40 center">

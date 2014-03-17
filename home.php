@@ -6,6 +6,7 @@ require_once("class.Quartz.php");
 $Quartz = new Quartz(True, 1);
 
 
+
 print(
 	isset($_GET['ajax']) ?
 		json_encode([
