@@ -14,7 +14,7 @@ if( validateInputs( $_POST, ['fname', 'lname', 'email', 'username', 'password1',
 		'username' => $_POST['username'],
 		'password1' => $_POST['password1'],
 		'password2' => $_POST['password2']
-		])->register();
+	])->register();
 
 
 	// If Errors

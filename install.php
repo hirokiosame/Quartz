@@ -8,7 +8,7 @@ $Quartz = new Quartz(False);
 // Step 1 - There is no config file or there is an error with it and must be recreated
 if(
 	$Quartz->config['status'] === 0 	||	// Not Created
-	!isset($Quartz->mysql)		// No MySQl Data
+	!isset($Quartz->mysql)					// No MySQl Data
 ){
 
 	// Step 1a - Config File Creation
@@ -73,11 +73,24 @@ if(
 				];
 
 				// Show Step 1 - Permissions Denied
-				print( isset($_POST['ajax']) ? json_encode(['jQ' => ['replaceWith' => '.wrapper'], 'html' => Template::install_s1_denied($returnMessage)]) : Template::htmlWrap("Template::install_s1_denied", [$returnMessage]) );
+				print( isset($_POST['ajax']) ? json_encode(['jQ' => ['replaceWith' => [ '.wrapper' => Template::install_s1_denied($returnMessage) ]] ]) : Template::htmlWrap("Template::install_s1_denied", [$returnMessage]) );
 			}
 
 		}
 
+	}else
+
+	if( isset($_POST['configReady']) ){
+		
+		// Some Error
+		if( $Quartz->config['status'] < 1 ){
+
+			print( json_encode([
+				'errors' => [
+					'notReady'=> ( $Quartz->config['status'] === -1 ? "The file could not be located. Make sure the name is correct!" : "The file was found but could not be read. Make sure the permissions are set to readable!" )
+				]
+			]) );
+		}
 	}
 
 	// No Requests Sent -- Display Form
@@ -140,7 +153,7 @@ if( isset($Quartz->mysql) ){
 							'type' => 'admin',
 							'registered' => date('Y-m-d H:i:s', time()),
 							'activated' => date('Y-m-d H:i:s', time())
-						]))->register();
+						]))->register(false);
 
 			// If Errors
 			if( count($register->errors)>0 ){
@@ -178,10 +191,10 @@ if( isset($Quartz->mysql) ){
 				'username' =>'b',
 				'password1' => '1'
 			];
-			print( isset($_POST['ajax']) ? json_encode([ 'jQ' => ['replaceWith' => '.wrapper'], 'html' => Template::install_s2() ]) : Template::htmlWrap("Template::install_s2", [$test]) );
+			print( isset($_POST['ajax']) ? json_encode([ 'jQ' => ['replaceWith' => ['.wrapper' => Template::install_s2() ]] ]) : Template::htmlWrap("Template::install_s2", [$test]) );
 		}
 	}else{
-		print("Already Installed -- Just Login!");
+		header("Location: /index.php");
 	}
 
 }

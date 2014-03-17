@@ -14,4 +14,4 @@
 	// Password for MySQL User
 	define('MySQL_PASSWORD', 'root');
 
-?>
+	?>

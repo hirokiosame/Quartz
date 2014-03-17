@@ -23,10 +23,10 @@ class Template{
 		ob_start(); ?>
 		<div class="wrapper">
 			<div class="section install">
-				<h2>Quartz Setup Wizard | Configuration</h2>
+				<h2>Quartz Setup Wizard <span class="light">Configuration</span></h2>
 
 				<form method="post" action="/install.php">
-				<table class="g50 center">
+				<table class="g60 center">
 					<tr>
 						<td colspan="2">You have either not setup a <b>config.php</b> file or the MySQL connection failed to establish. Fill in the form to either install Quartz or to fix the connecion!</td>
 					</tr>
@@ -93,8 +93,9 @@ class Template{
 				<div class="g60 center">
 					<p>Successfully connected to MySQL! However, permission was denied trying to create <b>config.php</b> in the Quartz directory. Copy and paste the code below into a plain text editor and save it as <b>config.php</b> in the Quartz folder.</p>
 					<br>
+					<div class="error notReady"></div>
 					<?=$params['html']?>
-					<form class="step2" method="post" action="/install.php">
+					<form method="post" action="/install.php">
 						<input type="hidden" name="configReady" value="1">
 						<input type="submit" value="Config File is Made">
 					</form>
@@ -151,7 +152,7 @@ class Template{
 				<h2>Quartz Setup Wizard <span class="light">Registration</span></h2>
 
 				<form method="post" class="installer" action="/install.php">
-				<?=$this->registrationTable($params)?>
+				<?=Template::registrationTable($params)?>
 				</form>
 			</div>
 		</div>

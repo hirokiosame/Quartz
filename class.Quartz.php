@@ -259,7 +259,7 @@ class Account{
 		}
 
 		// Set to Session
-		//$setSession && $_SESSION['id'] = ( isset($account) ? $account['id'] : $this->mysql->lastInsertId() );
+		$setSession && $_SESSION['id'] = ( isset($account) ? $account['id'] : $this->mysql->lastInsertId() );
 
 		return $this;
 	
@@ -356,8 +356,9 @@ class Quartz{
 
 		// We want to store it numerically so different files can handle the error differently (eg. Install.php)
 		// Not redable -> might as well not exist -> recreate file instead of intimidating terminal chmod command
-		$this->config['status'] = !is_readable($this->config['path'] . $this->config['file']) ? 0 : 1;
+		$this->config['status'] = !file_exists($this->config['path'] . $this->config['file']) ? -1 : ( !is_readable($this->config['path'] . $this->config['file']) ? 0 : 1 );
 		
+
 		// Test MySQL Credentials if config exists
 		if(
 			// If Exists...
