@@ -63,13 +63,13 @@ $(function(){
 					Object.keys(data.errors).forEach(function(errClass){
 
 						// Get Target -- Last Child
-						var target = $(".error."+errClass);
-						while( target.children().length ){ target = target.children(); }
+						var target = $(".error."+errClass).show();
+						while( target.children().length ){ target = target.children().show(); }
 
-						target.html(data.errors[errClass]).show(100);
+						target.html(data.errors[errClass]);
 
 						// Using HTML instead of Text because sometimes there are links
-						target.end().first().html(data.errors[errClass]).parents(".error").show(100);
+					//	target.end().first().html(data.errors[errClass]).parents(".error").show(100);
 					});
 				}
 

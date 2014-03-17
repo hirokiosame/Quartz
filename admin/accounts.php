@@ -11,7 +11,7 @@ if(
 		['validEmail']
 	)
 ){
-	print_r( (new Account($Quartz->mysql, [ 'email' => $_POST['validEmail'] ]))->register(true) );
+	print_r( (new Account($Quartz->mysql, [ 'email' => $_POST['validEmail'] ]))->register(false, false) );
 }
 
 
@@ -21,7 +21,7 @@ include('../_header.php');
 	<div class="section">
 		<h2>Valid Emails</h2>
 		<hr>
-		
+
 		<table class="g80 center">
 			<tr>
 				<th></th>

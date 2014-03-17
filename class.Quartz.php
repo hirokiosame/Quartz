@@ -224,7 +224,7 @@ class Account{
 					);
 
 			// Set Registration Date
-			//$this->account['registered'] = date('Y-m-d H:i:s', time());
+			$this->account['registered'] = date('Y-m-d H:i:s', time());
 
 			// Set Activation Hash
 		}else{
@@ -252,7 +252,7 @@ class Account{
 			$stmt->closeCursor();
 		}catch(PDOException $e){
 			// Store in a Log File Instead...
-			print_r($e->getMessage());
+			//print_r($e->getMessage());
 			$this->errors['registeration'] = "Something went wrong! Please try again later.";
 
 			return $this;
