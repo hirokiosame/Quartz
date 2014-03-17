@@ -5,8 +5,6 @@ require_once("class.Quartz.php");
 // Get Config
 $Quartz = new Quartz(True, 0);
 
-
-
 if( validateInputs( $_POST, ['fname', 'lname', 'email', 'username', 'password1', 'password2'] ) ){
 
 	$Quartz->account([
@@ -40,7 +38,7 @@ if( validateInputs( $_POST, ['fname', 'lname', 'email', 'username', 'password1',
 	}else{
 		print( isset($_POST['ajax']) ?
 			json_encode([
-				'jQ' => ['replaceWith' => ['.wrapper' => "Done! Activation mail"]]
+				'jQ' => ['replaceWith' => ['.wrapper' => "Done! Activation code: ".md5($Quartz->account->account['password'])]]
 			]) :
 			"non-ajax"
 		);
